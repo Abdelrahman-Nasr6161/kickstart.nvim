@@ -144,6 +144,7 @@ vim.opt.timeoutlen = 300
 vim.opt.splitright = true
 vim.opt.splitbelow = true
 
+-- Map Ctrl + Right Arrow to move forward a word
 -- Sets how neovim will display certain whitespace characters in the editor.
 --  See `:help 'list'`
 --  and `:help 'listchars'`
@@ -1055,7 +1056,7 @@ vim.api.nvim_create_autocmd({ "VimEnter" }, {
     end
   end
 })-- The line beneath this is called `modeline`. See `:help modeline`
-
+vim.keymap.set('n', '<leader>tt', ":NvimTreeFocus<CR>")
 vim.api.nvim_set_keymap('n', '<leader>e', ':NvimTreeToggle<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>1', ':b 1<CR>', { noremap = true, silent = true })
 -- vim: ts=2 sts=2 sw=2 et
