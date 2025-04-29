@@ -88,6 +88,9 @@ P.S. You can delete this when you're done too. It's your config now! :)
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
 vim.g.mapleader = ' '
+vim.keymap.set("n", "<leader>pv", function()
+  require("nvim-tree.api").tree.toggle()
+end, { noremap = true, silent = true })
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
@@ -99,7 +102,7 @@ vim.g.have_nerd_font = false
 --  For more options, you can see `:help option-list`
 
 -- Make line numbers default
-vim.opt.number = true
+vim.opt.relativenumber=true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
 -- vim.opt.relativenumber = true
@@ -160,7 +163,6 @@ vim.opt.scrolloff = 10
 -- instead raise a dialog asking if you wish to save the current file(s)
 -- See `:help 'confirm'`
 vim.opt.confirm = true
-
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -240,7 +242,26 @@ vim.opt.rtp:prepend(lazypath)
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
-
+   'neovim/nvim-lspconfig',
+  --   -- nvim-tree plugin with setup
+  {
+   "nvim-tree/nvim-tree.lua",  -- plugin repo
+    version = "*",  -- You can set version if needed
+    dependencies = { "nvim-tree/nvim-web-devicons" },  -- optional: add icons support
+    config = function()
+      require("nvim-tree").setup({
+        -- nvim-tree configuration
+        auto_reload_on_write = true,  -- Auto reload after writing a file
+        view = {
+          width = 30,                 -- Set tree width
+          side = 'left',              -- Position of the tree
+        },
+        renderer = {
+          highlight_opened_files = "all",  -- Highlight opened files
+        },
+      })
+    end
+  },
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
   -- keys can be used to configure plugin behavior/loading/etc.
@@ -374,8 +395,7 @@ require('lazy').setup({
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
     config = function()
-      -- Telescope is a fuzzy finder that comes with a lot of different things that
-      -- it can fuzzy find! It's more than just a "file finder", it can search
+      -- Telescope is a fuzzy finder that comes with a lot of different things that it can fuzzy find! It's more than just a "file finder", it can search
       -- many different aspects of Neovim, your workspace, LSP, and more!
       --
       -- The easiest way to use Telescope, is to start by doing something like:
@@ -618,6 +638,20 @@ require('lazy').setup({
         end,
       })
 
+-- LSP configuration for C++ using clangd
+require('lspconfig').clangd.setup({
+    on_attach = function(client, bufnr)
+        -- Optional: Custom LSP attach configurations, like key mappings
+        local bufopts = { noremap=true, silent=true, buffer=bufnr }
+        -- Mappings for LSP features like go-to-definition, hover, etc.
+        vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
+        vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
+        vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, bufopts)
+        vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, bufopts)
+        vim.keymap.set('n', '<leader>f', vim.lsp.buf.formatting, bufopts)
+    end
+})
+
       -- Diagnostic Config
       -- See :help vim.diagnostic.Opts
       vim.diagnostic.config {
@@ -827,8 +861,8 @@ require('lazy').setup({
         -- <c-k>: Toggle signature help
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
-        preset = 'default',
-
+        preset = 'super-tab',
+        --['<Tab>'] = {'accept'}
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
       },
@@ -842,7 +876,7 @@ require('lazy').setup({
       completion = {
         -- By default, you may press `<c-space>` to show the documentation.
         -- Optionally, set `auto_show = true` to show the documentation after a delay.
-        documentation = { auto_show = false, auto_show_delay_ms = 500 },
+        documentation = { auto_show = true, auto_show_delay_ms = 300 },
       },
 
       sources = {
@@ -879,7 +913,7 @@ require('lazy').setup({
       ---@diagnostic disable-next-line: missing-fields
       require('tokyonight').setup {
         styles = {
-          comments = { italic = false }, -- Disable italics in comments
+          comments = { italic = true }, -- Disable italics in comments
         },
       }
 
@@ -1003,6 +1037,21 @@ require('lazy').setup({
     },
   },
 })
+vim.api.nvim_create_autocmd({ "VimEnter" }, {
+  callback = function(data)
+    local status_ok, api = pcall(require, "nvim-tree.api")
+    if not status_ok then
+      return
+    end
 
--- The line beneath this is called `modeline`. See `:help modeline`
+    if vim.fn.isdirectory(data.file) == 1 then
+      vim.cmd.cd(data.file)
+      api.tree.open()
+    end
+  end
+})-- The line beneath this is called `modeline`. See `:help modeline`
+
+vim.api.nvim_set_keymap('n', '<leader>e', ':NvimTreeToggle<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>1', ':b 1<CR>', { noremap = true, silent = true })
 -- vim: ts=2 sts=2 sw=2 et
+--
